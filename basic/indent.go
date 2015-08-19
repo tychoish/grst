@@ -6,7 +6,7 @@ import (
 )
 
 func (self *RstBasicBuilder) IndentPadding() string {
-	return strings.Repeat(" ", self.Indent)
+	return strings.Repeat(" ", self.Indent())
 }
 
 func (self *RstBasicBuilder) Indent() int {

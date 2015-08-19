@@ -1,8 +1,16 @@
 package grst
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
-// These Functions return strings that are used
+// These Functions return strings that are used in the RST implementation
+
+func headingLine(text, char string) string {
+	return strings.Repeat(char, len(text))
+
+}
 
 func Role(name, value string) string {
 	return fmt.Sprintf(":%s:`%s`", name, value)

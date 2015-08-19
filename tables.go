@@ -12,21 +12,21 @@ type RstTable struct {
 	width        int
 	hasHeader    bool
 	columnWidths []int
-	columNames   []string
+	columnNames  []string
 	rows         [][]string
 }
 
-func (self *RstTable) check() error {
+func (self *RstTable) check() (err error) {
 	if self.width == 0 {
-		return nil
+		return
 	}
 
-	if self.width != len(self.columNames) {
+	if self.width != len(self.columnNames) {
 		err = fmt.Errorf("column count inconsistent. internal error. (width of %d, with %d columns)",
-			self.width, len(self.columNames))
+			self.width, len(self.columnNames))
 	}
 
-	return err
+	return
 }
 
 func (self *RstTable) validate(fields []string) (err error) {
@@ -36,14 +36,14 @@ func (self *RstTable) validate(fields []string) (err error) {
 	} else {
 		if len(fields) != self.width {
 			err = fmt.Errorf("row [$s] has %d columns, not %d, the required.",
-				strings.Join(fields, ","), len(rows), self.width)
+				strings.Join(fields, ","), len(self.rows), self.width)
 		}
 	}
 
 	return
 }
 
-func (self *rstTable) validateTable() error {
+func (self *RstTable) validateTable() error {
 	catcher := grip.NewCatcher()
 
 	catcher.Add(self.check()) // to validate width and column names
@@ -58,23 +58,25 @@ func (self *rstTable) validateTable() error {
 	return catcher.Resolve()
 }
 
-func (self *RstTable) AddRow(fields ...[]string) (err error) {
+func (self *RstTable) AddRow(fields ...string) (err error) {
 	err = self.check()
 	if err != nil {
-		return err
+		return
 	}
 
 	err = self.validate(fields)
 	if err != nil {
-		return err
+		return
 	}
 
-	if len(rows) < 1 {
-		self.columNames = append(self.columNames, fields...)
-		self.columNames = append(self.rows, fields)
+	if len(self.rows) < 1 {
+		self.columnNames = append(self.columnNames, fields...)
+		self.rows = append(self.rows, fields)
 	} else {
 		self.rows = append(self.rows, fields)
 	}
+
+	return
 }
 
 func (self *RstTable) EnableHeader() {
@@ -90,7 +92,7 @@ func (self *RstTable) SetWidths(widths ...int) error {
 		self.width = len(widths)
 	} else if self.width != len(widths) {
 		return fmt.Errorf("cannot set widths for %d columns. there are %d columns in this table.",
-			len(self.widths), self.wdith)
+			len(widths), self.width)
 	}
 
 	var total int
@@ -117,30 +119,37 @@ func (self *RstTable) JoinedWidths() string {
 	return strings.Join(parts, " ")
 }
 
-func (self RstBuilder) ListTable(table *RstTable) {
-	var lines []string
+func (self *RstBuilder) ListTable(table *RstTable) (err error) {
+	lines := NewBasicBuilder()
 
-	fields := &RstFieldSet{}
+	fields := RstFieldSet{}
 	if table.hasHeader == true {
-		fields.AddField("header-rows", len(self.columnNames))
+		fields.AddField("header-rows", strconv.Itoa(len(table.columnNames)))
 	}
 
-	if len(table.columnWidths) == self.widths {
+	if len(table.columnWidths) == table.width {
 		// we just care that it's not 0, but might as well here.
 
 		fields.AddField("widths", table.JoinedWidths())
 	}
 
-	self.AddBasicDirectiveWithFields("list-table", fields)
+	lines.AddBasicDirectiveWithFields("list-table", fields)
 
-	for _, row := range self.rows {
-		self.NewLine()
+	for _, row := range table.rows {
+		lines.NewLine()
 		for idx, field := range row {
 			if idx == 0 {
-				self.LiCustom("* -", field)
+				lines.LiCustom("* -", field)
 			} else {
-				self.LiCustom("  -", field)
+				lines.LiCustom("  -", field)
 			}
 		}
+	}
+
+	outputLines, err := lines.GetLines()
+	if err != nil {
+		return
+	} else {
+		return self.AddLines(outputLines)
 	}
 }

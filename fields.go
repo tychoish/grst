@@ -24,7 +24,7 @@ func (self *RstFieldSet) Iter() <-chan *RstFieldPair {
 	if self.Len() != 0 {
 		go func() {
 			for i := 0; i < self.Len(); i++ {
-				ch <- self.fieldPairs[i]
+				ch <- &self.fieldPairs[i]
 			}
 		}()
 
@@ -42,11 +42,11 @@ func (self *RstFieldSet) AddField(name, value string) {
 }
 
 func (self *RstFieldSet) resolve(indent int) (lines []string) {
-	for _, field := range fields.Iter() {
+	for field := range self.Iter() {
 		lines = append(lines, fmt.Sprintf("%s:%s: %s",
 			strings.Repeat(" ", indent),
 			field.Name, field.Value))
 	}
 
-	returnn
+	return
 }

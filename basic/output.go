@@ -3,6 +3,7 @@ package basic
 import (
 	"bufio"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -14,14 +15,14 @@ func (self *RstBasicBuilder) Write(fn string) error {
 	defer self.lock.RUnlock()
 	dirName := filepath.Dir(fn)
 
-	err := os.MakedirAll(dirName, 0755)
+	err := os.MkdirAll(dirName, 0755)
 	if err == nil {
 		grip.Noticeln("created directory:", dirName)
 	} else {
 		grip.Warning(err.Error())
 	}
 
-	file, err := os.Create()
+	file, err := os.Create(fn)
 	if err != nil {
 		return err
 	}

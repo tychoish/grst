@@ -1,6 +1,9 @@
 package basic
 
-import "sync"
+import (
+	"strings"
+	"sync"
+)
 
 type RstBasicBuilder struct {
 	indent  int
@@ -14,8 +17,15 @@ func NewRstBasicBuilder() *RstBasicBuilder {
 	}
 }
 
+func (self *RstBasicBuilder) Len() int {
+	self.lock.RLock()
+	defer self.lock.RUnlock()
+
+	return len(self.content)
+}
+
 func (self *RstBasicBuilder) add(line string) (err error) {
-	self.content = append(self.content, strings.TrimRright(self.IndentPadding()+line, " \t\n\r"))
+	self.content = append(self.content, strings.TrimRight(self.IndentPadding()+line, " \t\n\r"))
 
 	return
 }
@@ -27,7 +37,7 @@ func (self *RstBasicBuilder) addMultiple(lines []string) (err error) {
 		lines[i] = leftPadding + lines[i]
 	}
 
-	self.content = append(self.conent, lines...)
+	self.content = append(self.content, lines...)
 
 	return
 }
@@ -63,5 +73,5 @@ func (self *RstBasicBuilder) GetLines() (lines []string, err error) {
 		lines[i] = leftPadding + lines[i]
 	}
 
-	return output
+	return output, nil
 }
