@@ -5,7 +5,9 @@ import (
 	"strings"
 
 	"./basic"
+	"./hashed"
 	"./headings"
+	"./unsafe"
 )
 
 type RstGenerator interface {
@@ -16,8 +18,6 @@ type RstGenerator interface {
 	SetIndent(int) error
 	Indent() int
 	IndentPadding() string
-	Print()
-	Write(string) error
 }
 
 type RstBuilder struct {
@@ -25,7 +25,15 @@ type RstBuilder struct {
 }
 
 func NewBasicBuilder() *RstBuilder {
-	return &RstBuilder{basic.NewRstBasicBuilder()}
+	return &RstBuilder{basic.NewRstBuilder()}
+}
+
+func NewUnsafeBuilder() *RstBuilder {
+	return &RstBuilder{unsafe.NewRstBuilder()}
+}
+
+func NewHashedBuilder() *RstBuilder {
+	return &RstBuilder{hashed.NewRstBuilder()}
 }
 
 func (self *RstBuilder) NewLine() error {

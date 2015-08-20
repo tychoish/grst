@@ -1,4 +1,4 @@
-package basic
+package grst
 
 import (
 	"bufio"
@@ -10,12 +10,14 @@ import (
 	"github.com/tychoish/grip"
 )
 
-func (self *RstBasicBuilder) Write(fn string) error {
-	self.lock.RLock()
-	defer self.lock.RUnlock()
-	dirName := filepath.Dir(fn)
+func (self *RstBuilder) Write(fn string) error {
+	lines, err := self.GetLines()
+	if err != nil {
+		return err
+	}
 
-	err := os.MkdirAll(dirName, 0755)
+	dirName := filepath.Dir(fn)
+	err = os.MkdirAll(dirName, 0755)
 	if err == nil {
 		grip.Noticeln("created directory:", dirName)
 	} else {
@@ -31,7 +33,7 @@ func (self *RstBasicBuilder) Write(fn string) error {
 	w := bufio.NewWriter(file)
 	catcher := grip.NewCatcher()
 	var numBytes int
-	for _, line := range self.content {
+	for _, line := range lines {
 		nb, err := fmt.Fprintln(w, line)
 		numBytes += nb
 		catcher.Add(err)
@@ -46,9 +48,10 @@ func (self *RstBasicBuilder) Write(fn string) error {
 	return catcher.Resolve()
 }
 
-func (self *RstBasicBuilder) Print() {
-	self.lock.RLock()
-	defer self.lock.RUnlock()
+func (self *RstBuilder) Print() error {
+	lines, err := self.GetLines()
 
-	fmt.Println(strings.Join(self.content, "\n"))
+	fmt.Println(strings.Join(lines, "\n"))
+
+	return err
 }
