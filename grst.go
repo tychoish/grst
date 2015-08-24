@@ -24,14 +24,24 @@ type RstBuilder struct {
 	RstGenerator
 }
 
+// The basic builder implements an RstBuilder backend that stores
+// reStructuredText content as a sequence of strings, and protects
+// access to that structure with a readers-writer lock. Multiple
+// concurrent operations are atomic in relationship to each other.
 func NewBasicBuilder() *RstBuilder {
 	return &RstBuilder{basic.NewRstBuilder()}
 }
 
+// Similar to the basic builder, but omits locking for single-threaded
+// cases.
 func NewUnsafeBuilder() *RstBuilder {
 	return &RstBuilder{unsafe.NewRstBuilder()}
 }
 
+// Implements an RstBuilder backend that stores reStructuredText
+// content in a hash map structure. Multiple concurrent operations are
+// atomic in relationship to each other. May be preferable for very
+// large restructured text content.
 func NewHashedBuilder() *RstBuilder {
 	return &RstBuilder{hashed.NewRstBuilder()}
 }
@@ -85,27 +95,27 @@ func (self *RstBuilder) Field(fields RstFieldSet) error {
 }
 
 func (self *RstBuilder) AddBasicDirective(name string) error {
-	return self.AddDirective(name, "", RstFieldSet{}, NewBasicBuilder())
+	return self.AddDirective(name, "", RstFieldSet{}, NewUnsafeBuilder())
 }
 
 func (self *RstBuilder) AddBasicDirectiveWithArgument(name, value string) error {
-	return self.AddDirective(name, value, RstFieldSet{}, NewBasicBuilder())
+	return self.AddDirective(name, value, RstFieldSet{}, NewUnsafeBuilder())
 }
 
 func (self *RstBuilder) AddBasicDirectiveWithFields(name string, fields RstFieldSet) error {
-	return self.AddDirective(name, "", fields, NewBasicBuilder())
+	return self.AddDirective(name, "", fields, NewUnsafeBuilder())
 }
 
 func (self *RstBuilder) AddBasicDirectiveWithArgumentAndFields(name, value string, fields RstFieldSet) error {
-	return self.AddDirective(name, value, fields, NewBasicBuilder())
+	return self.AddDirective(name, value, fields, NewUnsafeBuilder())
 }
 
 func (self *RstBuilder) AddBasicDirectiveWithArgumentAndContent(name, value string, content RstBuilder) error {
-	return self.AddDirective(name, value, RstFieldSet{}, NewBasicBuilder())
+	return self.AddDirective(name, value, RstFieldSet{}, NewUnsafeBuilder())
 }
 
 func (self *RstBuilder) AddBasicDirectiveWithFieldsAndContent(name string, fields RstFieldSet, content RstBuilder) error {
-	return self.AddDirective(name, "", fields, NewBasicBuilder())
+	return self.AddDirective(name, "", fields, NewUnsafeBuilder())
 }
 
 func (self *RstBuilder) Replacement(name, value string) error {

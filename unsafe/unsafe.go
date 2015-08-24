@@ -50,6 +50,7 @@ func (self *RstUnsafeBuilder) Indent() int {
 	return self.indent
 
 }
+
 func (self *RstUnsafeBuilder) SetIndent(n int) (err error) {
 	if n < 0 {
 		err = fmt.Errorf("Indent must be larger than 0, %d is not.", n)

@@ -4,16 +4,20 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/tychoish/grip"
 )
 
 type RstTable struct {
-	width        int
-	hasHeader    bool
-	columnWidths []int
-	columnNames  []string
-	rows         [][]string
+	width          int
+	hasHeader      bool
+	columnWidths   []int
+	maxFieldWidths []int
+	columnNames    []string
+	rows           [][]string
+
+	*sync.RWMutex
 }
 
 func (self *RstTable) check() (err error) {
@@ -21,9 +25,9 @@ func (self *RstTable) check() (err error) {
 		return
 	}
 
-	if self.width != len(self.columnNames) {
-		err = fmt.Errorf("column count inconsistent. internal error. (width of %d, with %d columns)",
-			self.width, len(self.columnNames))
+	if self.width != len(self.columnNames) && self.wdith != len(self.maxFieldWidth) {
+		err = fmt.Errorf("column count inconsistent. internal error. (width of %d, with (%d, %d) columns, )",
+			self.width, len(self.columnNames), len(self.maxFieldWidth))
 	}
 
 	return
@@ -33,14 +37,24 @@ func (self *RstTable) validate(fields []string) (err error) {
 	if self.width == 0 {
 		// this is the first row, which all is correct.
 		self.width = len(fields)
+		self.maxFieldWidths = make([]int, self.width)
+
+		return nil
 	} else {
+		catcher := grip.NewCatcher()
+
 		if len(fields) != self.width {
-			err = fmt.Errorf("row [$s] has %d columns, not %d, the required.",
-				strings.Join(fields, ","), len(self.rows), self.width)
+			catcher.Add(fmt.Errorf("row [$s] has %d columns, not %d, the required.",
+				strings.Join(fields, ","), len(self.rows), self.width))
 		}
+		if len(fields) != len(self.maxFieldWidths) {
+			catcher.Add(fmt.Errorf("row [$s] has %d columns, not %d, the required.",
+				strings.Join(fields, ","), len(self.rows), len(self.maxFieldWidths)))
+		}
+
+		return catcher.Resolve()
 	}
 
-	return
 }
 
 func (self *RstTable) validateTable() error {
@@ -59,6 +73,9 @@ func (self *RstTable) validateTable() error {
 }
 
 func (self *RstTable) AddRow(fields ...string) (err error) {
+	self.Lock()
+	defer self.Unlock()
+
 	err = self.check()
 	if err != nil {
 		return
@@ -67,6 +84,12 @@ func (self *RstTable) AddRow(fields ...string) (err error) {
 	err = self.validate(fields)
 	if err != nil {
 		return
+	}
+
+	for idx, field := range fields {
+		if len(field) > self.maxFieldWidths[idx] {
+			self.maxFieldWidths[idx] = len(field)
+		}
 	}
 
 	if len(self.rows) < 1 {
@@ -88,6 +111,9 @@ func (self *RstTable) DisableHeader() {
 }
 
 func (self *RstTable) SetWidths(widths ...int) error {
+	self.Lock()
+	defer self.Unlock()
+
 	if self.width == 0 {
 		self.width = len(widths)
 	} else if self.width != len(widths) {
@@ -119,8 +145,11 @@ func (self *RstTable) JoinedWidths() string {
 	return strings.Join(parts, " ")
 }
 
-func (self *RstBuilder) ListTable(table *RstTable) (err error) {
-	lines := NewBasicBuilder()
+func (self *RstBuilder) ListTable(table *RstTable) error {
+	table.RLock()
+	defer table.RUnlock()
+
+	lines := NewUnsafeBuilder()
 
 	fields := RstFieldSet{}
 	if table.hasHeader == true {
@@ -148,8 +177,41 @@ func (self *RstBuilder) ListTable(table *RstTable) (err error) {
 
 	outputLines, err := lines.GetLines()
 	if err != nil {
-		return
+		return err
 	} else {
 		return self.AddLines(outputLines)
 	}
+}
+
+func (self *RstBuilder) StandardTable(table *RstTable) error {
+	table.RLock()
+	defer table.RUnlock()
+
+	lines := NewUnsafeBuilder()
+	catcher := grip.NewCatcher()
+
+	columnLines := make([]string, len(table.maxFieldWidths))
+	for idx, col := range table.maxFieldWidths {
+		columnLines[idx] = strings.Repeat("-", col)
+	}
+	rowSeperator := "+" + strings.Join(columnLines, "+") + "+"
+
+	catcher.Add(lines.AddLine(rowSeperator))
+	for _, row := range table.rows {
+		paddedFields := make([]string, len(table.maxFieldWidths))
+
+		for idx, field := range row {
+			if len(field) < table.maxFieldWidths[idx] {
+				paddedFields[idx] = field + strings.Repeat(" ", table.maxFieldWidths-len(field))
+			} else {
+				paddedFields[idx] = field
+			}
+		}
+
+		catcher.Add(lines.AddLine("|" + strings.Join(paddedFields, "|") + "|"))
+		catcher.Add(lines.AddLine(rowSeperator))
+	}
+
+	return catcher.Resolve()
+
 }
