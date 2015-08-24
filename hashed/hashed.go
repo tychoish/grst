@@ -10,19 +10,19 @@ type RstHashedBuilder struct {
 	content map[int]string
 	indent  int
 	line    int
-	lock    *sync.RWMutex
+
+	*sync.RWMutex
 }
 
 func NewRstBuilder() *RstHashedBuilder {
 	return &RstHashedBuilder{
 		content: make(map[int]string),
-		lock:    &sync.RWMutex{},
 	}
 }
 
 func (self *RstHashedBuilder) AddLine(line string) (err error) {
-	self.lock.Lock()
-	defer self.lock.Unlock()
+	self.Lock()
+	defer self.Unlock()
 
 	self.content[self.line] = strings.TrimRight(self.IndentPadding()+line, " \t\n\r")
 	self.line += 1
@@ -31,8 +31,8 @@ func (self *RstHashedBuilder) AddLine(line string) (err error) {
 }
 
 func (self *RstHashedBuilder) AddLines(lines []string) (err error) {
-	self.lock.Lock()
-	defer self.lock.Unlock()
+	self.Lock()
+	defer self.Unlock()
 
 	leftPadding := self.IndentPadding()
 
@@ -45,8 +45,8 @@ func (self *RstHashedBuilder) AddLines(lines []string) (err error) {
 }
 
 func (self *RstHashedBuilder) GetLines() (lines []string, err error) {
-	self.lock.RLock()
-	defer self.lock.RUnlock()
+	self.RLock()
+	defer self.RUnlock()
 
 	for i := 0; i <= self.line; i++ {
 		lines = append(lines, self.content[i])
@@ -72,8 +72,8 @@ func (self *RstHashedBuilder) SetIndent(n int) (err error) {
 		err = fmt.Errorf("Indent must be larger than 0, %d is not.", n)
 	}
 
-	self.lock.Lock()
-	defer self.lock.Unlock()
+	self.Lock()
+	defer self.Unlock()
 
 	self.indent = n
 

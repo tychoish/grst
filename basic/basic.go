@@ -9,25 +9,24 @@ import (
 type RstBasicBuilder struct {
 	indent  int
 	content []string
-	lock    *sync.RWMutex
+
+	*sync.RWMutex
 }
 
 func NewRstBuilder() *RstBasicBuilder {
-	return &RstBasicBuilder{
-		lock: &sync.RWMutex{},
-	}
+	return &RstBasicBuilder{}
 }
 
 func (self *RstBasicBuilder) Len() int {
-	self.lock.RLock()
-	defer self.lock.RUnlock()
+	self.RLock()
+	defer self.RUnlock()
 
 	return len(self.content)
 }
 
 func (self *RstBasicBuilder) AddLine(line string) (err error) {
-	self.lock.Lock()
-	defer self.lock.Unlock()
+	self.Lock()
+	defer self.Unlock()
 
 	self.content = append(self.content, strings.TrimRight(self.IndentPadding()+line, " \t\n\r"))
 
@@ -35,8 +34,8 @@ func (self *RstBasicBuilder) AddLine(line string) (err error) {
 }
 
 func (self *RstBasicBuilder) AddLines(lines []string) (err error) {
-	self.lock.Lock()
-	defer self.lock.Unlock()
+	self.Lock()
+	defer self.Unlock()
 
 	leftPadding := self.IndentPadding()
 
@@ -50,8 +49,8 @@ func (self *RstBasicBuilder) AddLines(lines []string) (err error) {
 }
 
 func (self *RstBasicBuilder) GetLines() (output []string, err error) {
-	self.lock.RLock()
-	defer self.lock.RUnlock()
+	self.RLock()
+	defer self.RUnlock()
 	copy(output, self.content)
 
 	return
@@ -70,8 +69,8 @@ func (self *RstBasicBuilder) SetIndent(n int) (err error) {
 		err = fmt.Errorf("Indent must be larger than 0, %d is not.", n)
 	}
 
-	self.lock.Lock()
-	defer self.lock.Unlock()
+	self.Lock()
+	defer self.Unlock()
 
 	self.indent = n
 
