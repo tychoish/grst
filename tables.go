@@ -25,9 +25,9 @@ func (self *RstTable) check() (err error) {
 		return
 	}
 
-	if self.width != len(self.columnNames) && self.wdith != len(self.maxFieldWidth) {
+	if self.width != len(self.columnNames) && self.width != len(self.maxFieldWidths) {
 		err = fmt.Errorf("column count inconsistent. internal error. (width of %d, with (%d, %d) columns, )",
-			self.width, len(self.columnNames), len(self.maxFieldWidth))
+			self.width, len(self.columnNames), len(self.maxFieldWidths))
 	}
 
 	return
@@ -202,7 +202,7 @@ func (self *RstBuilder) StandardTable(table *RstTable) error {
 
 		for idx, field := range row {
 			if len(field) < table.maxFieldWidths[idx] {
-				paddedFields[idx] = field + strings.Repeat(" ", table.maxFieldWidths-len(field))
+				paddedFields[idx] = field + strings.Repeat(" ", table.maxFieldWidths[idx]-len(field))
 			} else {
 				paddedFields[idx] = field
 			}
