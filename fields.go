@@ -19,15 +19,15 @@ func (self *RstFieldSet) Len() int {
 }
 
 func (self *RstFieldSet) Iter() <-chan *RstFieldPair {
-	ch := make(chan *RstFieldPair)
+	ch := make(chan *RstFieldPair, self.Len())
 
 	if self.Len() != 0 {
 		go func() {
 			for i := 0; i < self.Len(); i++ {
 				ch <- &self.fieldPairs[i]
 			}
+			close(ch)
 		}()
-
 	}
 
 	return ch
