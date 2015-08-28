@@ -8,8 +8,11 @@ import (
 // These Functions return strings that are used in the RST implementation
 
 func headingLine(text, char string) string {
-	return strings.Repeat(char, len(text))
+	if len(char) > 1 {
+		char = string(char[0])
+	}
 
+	return strings.Repeat(char, len(text))
 }
 
 func Role(name, value string) string {
