@@ -18,6 +18,7 @@ type RstGenerator interface {
 	Indent() int
 	IndentPadding() string
 	Reset()
+	Builder() string
 }
 
 type RstBuilder struct {
@@ -57,6 +58,15 @@ func (self *RstBuilder) NewLines(number int) error {
 	return nil
 }
 
+func (self *RstBuilder) Append(content RstBuilder) (err error) {
+	lines, err := content.GetLines()
+	if err != nil {
+		return err
+	}
+
+	return self.AddLines(lines)
+}
+
 func (self *RstBuilder) AddDirective(name, value string, fields RstFieldSet, content RstGenerator) error {
 	var lines []string
 
@@ -64,7 +74,6 @@ func (self *RstBuilder) AddDirective(name, value string, fields RstFieldSet, con
 
 	if fields.Len() > 0 {
 		lines = append(lines, fields.resolve(3)...)
-
 	}
 
 	if content.Len() > 0 {
@@ -76,25 +85,8 @@ func (self *RstBuilder) AddDirective(name, value string, fields RstFieldSet, con
 	return self.AddLines(lines)
 }
 
-func (self *RstBuilder) Append(content RstBuilder) (err error) {
-	lines, err := content.GetLines()
-	if err != nil {
-		return err
-	}
-
-	return self.AddLines(lines)
-}
-
-func (self *RstBuilder) LiCustom(char, text string) error {
-	return self.AddLine(fmt.Sprintln(char, text))
-}
-
-func (self *RstBuilder) Li(text string) error {
-	return self.LiCustom("-", text)
-}
-
 func (self *RstBuilder) Field(fields RstFieldSet) error {
-	return self.AddLines(fields.resolve(0))
+	return self.AddLines(fields.resolve(self.Indent()))
 }
 
 func (self *RstBuilder) AddBasicDirective(name string) error {
@@ -119,6 +111,14 @@ func (self *RstBuilder) AddBasicDirectiveWithArgumentAndContent(name, value stri
 
 func (self *RstBuilder) AddBasicDirectiveWithFieldsAndContent(name string, fields RstFieldSet, content RstBuilder) error {
 	return self.AddDirective(name, "", fields, NewUnsafeBuilder())
+}
+
+func (self *RstBuilder) LiCustom(char, text string) error {
+	return self.AddLine(fmt.Sprintln(char, text))
+}
+
+func (self *RstBuilder) Li(text string) error {
+	return self.LiCustom("-", text)
 }
 
 func (self *RstBuilder) Replacement(name, value string) error {

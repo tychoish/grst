@@ -13,6 +13,10 @@ type RstBasicBuilder struct {
 	sync.RWMutex
 }
 
+func (self *RstBasicBuilder) Builder() string {
+	return "basic"
+}
+
 func NewRstBuilder() *RstBasicBuilder {
 	return &RstBasicBuilder{}
 }

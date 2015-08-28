@@ -20,6 +20,10 @@ func NewRstBuilder() *RstHashedBuilder {
 	}
 }
 
+func (self *RstHashedBuilder) Builder() string {
+	return "hashed"
+}
+
 func (self *RstHashedBuilder) Reset() {
 	self.Lock()
 	defer self.Unlock()
@@ -45,9 +49,10 @@ func (self *RstHashedBuilder) AddLines(lines []string) (err error) {
 
 	leftPadding := self.IndentPadding()
 
-	for i := 1; i < len(lines); i++ {
+	for i := 0; i < len(lines); i++ {
 		self.line += 1
 		self.content[self.line] = strings.TrimRight(leftPadding+lines[i], " \t\n\r")
+
 	}
 
 	return
@@ -57,8 +62,11 @@ func (self *RstHashedBuilder) GetLines() (lines []string, err error) {
 	self.RLock()
 	defer self.RUnlock()
 
-	for i := 1; i <= self.line; i++ {
-		lines = append(lines, self.content[i])
+	for i := 0; i <= self.line+1; i++ {
+		ln, ok := self.content[i]
+		if ok {
+			lines = append(lines, ln)
+		}
 	}
 
 	return

@@ -8,7 +8,9 @@ var _ = Suite(&FieldSuite{})
 
 func (s *FieldSuite) TestRstField(c *C) {
 	f := &RstFieldSet{}
-
+	fieldTester(c, f)
+}
+func fieldTester(c *C, f *RstFieldSet) {
 	// add a bunch of elements to the field set
 	for i := 0; i < 10; i++ {
 		c.Assert(f.Len(), Equals, i)

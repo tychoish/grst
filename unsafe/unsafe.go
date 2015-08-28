@@ -14,6 +14,10 @@ func NewRstBuilder() *RstUnsafeBuilder {
 	return &RstUnsafeBuilder{}
 }
 
+func (self *RstUnsafeBuilder) Builder() string {
+	return "unsafe"
+}
+
 func (self *RstUnsafeBuilder) Reset() {
 	self.content = make([]string, 0)
 	self.indent = 0
