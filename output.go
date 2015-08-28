@@ -55,3 +55,9 @@ func (self *RstBuilder) Print() error {
 
 	return err
 }
+
+func (self *RstBuilder) Resolve() (string, error) {
+	lines, err := self.GetLines()
+
+	return strings.Join(lines, "\n") + "\n", err
+}

@@ -40,5 +40,5 @@ func InlineLink(text, link string) string {
 }
 
 func FootnoteRef(name string) string {
-	return "[#" + name + "]"
+	return "[#" + name + "]_"
 }

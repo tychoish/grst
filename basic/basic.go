@@ -10,11 +10,19 @@ type RstBasicBuilder struct {
 	indent  int
 	content []string
 
-	*sync.RWMutex
+	sync.RWMutex
 }
 
 func NewRstBuilder() *RstBasicBuilder {
 	return &RstBasicBuilder{}
+}
+
+func (self *RstBasicBuilder) Reset() {
+	self.Lock()
+	defer self.Unlock()
+
+	self.content = make([]string, 0)
+	self.indent = 0
 }
 
 func (self *RstBasicBuilder) Len() int {
@@ -48,10 +56,11 @@ func (self *RstBasicBuilder) AddLines(lines []string) (err error) {
 	return
 }
 
-func (self *RstBasicBuilder) GetLines() (output []string, err error) {
+func (self *RstBasicBuilder) GetLines() (lines []string, err error) {
 	self.RLock()
 	defer self.RUnlock()
-	copy(output, self.content)
+
+	lines = append(lines, self.content...)
 
 	return
 }

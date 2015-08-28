@@ -14,6 +14,11 @@ func NewRstBuilder() *RstUnsafeBuilder {
 	return &RstUnsafeBuilder{}
 }
 
+func (self *RstUnsafeBuilder) Reset() {
+	self.content = make([]string, 0)
+	self.indent = 0
+}
+
 func (self *RstUnsafeBuilder) Len() int {
 	return len(self.content)
 }
@@ -37,7 +42,7 @@ func (self *RstUnsafeBuilder) AddLines(lines []string) (err error) {
 }
 
 func (self *RstUnsafeBuilder) GetLines() (lines []string, err error) {
-	copy(lines, self.content)
+	lines = append(lines, self.content...)
 
 	return
 }

@@ -45,6 +45,6 @@ func (s *FieldSuite) TestFormatting(c *C) {
 }
 
 func (s *FieldSuite) TestRefs(c *C) {
-
+	c.Assert(InlineLink("text", "link"), Equals, "`text <link>`_")
+	c.Assert(FootnoteRef("note"), Equals, "[#note]_")
 }
-func (*s )

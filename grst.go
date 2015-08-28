@@ -2,7 +2,6 @@ package grst
 
 import (
 	"fmt"
-	"strings"
 
 	"./basic"
 	"./hashed"
@@ -18,6 +17,7 @@ type RstGenerator interface {
 	SetIndent(int) error
 	Indent() int
 	IndentPadding() string
+	Reset()
 }
 
 type RstBuilder struct {
@@ -51,7 +51,10 @@ func (self *RstBuilder) NewLine() error {
 }
 
 func (self *RstBuilder) NewLines(number int) error {
-	return self.AddLine(strings.Repeat("\n", number-1))
+	for i := 1; i <= number; i++ {
+		self.AddLine("")
+	}
+	return nil
 }
 
 func (self *RstBuilder) AddDirective(name, value string, fields RstFieldSet, content RstGenerator) error {
