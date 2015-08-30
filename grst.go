@@ -2,6 +2,7 @@ package grst
 
 import (
 	"fmt"
+	"strings"
 
 	"./basic"
 	"./hashed"
@@ -70,7 +71,7 @@ func (self *RstBuilder) Append(content RstBuilder) (err error) {
 func (self *RstBuilder) AddDirective(name, value string, fields RstFieldSet, content RstGenerator) error {
 	var lines []string
 
-	lines = append(lines, fmt.Sprintf(".. %s:: %s", name, value))
+	lines = append(lines, strings.Trim(fmt.Sprintf(".. %s:: %s", name, value), " \n"))
 
 	if fields.Len() > 0 {
 		lines = append(lines, fields.resolve(3)...)
